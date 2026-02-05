@@ -1,0 +1,46 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: app
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3308:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - db_data:/var/lib/mysql
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 3005
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: app
+      DB_PASSWORD: app
+      DB_NAME: app
+      JWT_SECRET: change_me
+      JWT_REFRESH_SECRET: change_me_too
+      ACCESS_TOKEN_TTL_MIN: 10
+      REFRESH_TOKEN_TTL_DAYS: 7
+      STORAGE_DIR: /usr/src/app/storage
+    ports:
+      - "3005:3005"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./storage:/usr/src/app/storage
+
+volumes:
+  db_data:
