@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import lodash from "lodash";
 
-const { toInteger } = lodash;
+const {toInteger} = lodash;
 
 dotenv.config();
 

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+  <h1>Тестирование</h1>
+  <p class="hint">
+    все действия обновляют глобальный обьект state(window.apiState), который рендерится снизу страницы.
+    некоторые действия также выводят результат в alert.
+  </p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Регистрация</h3>
+      <label>Email</label>
+      <input id="signupEmail" type="email" placeholder="tatytygulovbatyrbek19@gmail.com" />
+      <label>Пароль</label>
+      <input id="signupPassword" type="password" placeholder="12345678" />
+      <button id="signupBtn">Зарегистрироваться</button>
+    </div>
+
+    <div class="card">
+      <h3>Вход</h3>
+      <label>Email</label>
+      <input id="signinEmail" type="email" placeholder="tatytygulovbatyrbek19@gmail.com" />
+      <label>Пароль</label>
+      <input id="signinPassword" type="password" placeholder="12345678" />
+      <button id="signinBtn">Войти</button>
+    </div>
+
+    <div class="card">
+      <h3>Обновление токена</h3>
+      <button id="refreshBtn">Обновить токен</button>
+      <div class="hint">Используется refresh токен из state</div>
+    </div>
+
+    <div class="card">
+      <h3>Информация</h3>
+      <button id="infoBtn">Получить информацию</button>
+    </div>
+
+    <div class="card">
+      <h3>Загрузка файла</h3>
+      <input id="uploadFile" type="file" />
+      <button id="uploadBtn">Загрузить файл</button>
+    </div>
+
+    <div class="card">
+      <h3>Список файлов</h3>
+      <div class="row">
+        <div>
+          <label>Размер списка</label>
+          <input id="listSize" type="number" value="10" />
+        </div>
+        <div>
+          <label>Страница</label>
+          <input id="listPage" type="number" value="1" />
+        </div>
+      </div>
+      <button id="listBtn">Получить список</button>
+    </div>
+
+    <div class="card">
+      <h3>Информация о файле</h3>
+      <label>ID файла</label>
+      <input id="getFileId" type="text" placeholder="Если пусто будет последний загруженный" />
+      <button id="getFileBtn">Получить файл</button>
+    </div>
+
+    <div class="card">
+      <h3>Скачать файл</h3>
+      <label>ID файла</label>
+      <input id="downloadFileId" type="text" placeholder="Если пусто будет последний загруженный" />
+      <button id="downloadFileBtn">Скачать</button>
+    </div>
+
+    <div class="card">
+      <h3>Удалить файл</h3>
+      <label>ID файла</label>
+      <input id="deleteFileId" type="text" placeholder="Если пусто будет последний загруженный" />
+      <button id="deleteFileBtn" class="secondary">Удалить</button>
+    </div>
+
+    <div class="card">
+      <h3>Обновить файл</h3>
+      <label>ID файла</label>
+      <input id="updateFileId" type="text" placeholder="Если пусто будет последний загруженный" />
+      <input id="updateFile" type="file" />
+      <button id="updateFileBtn">Обновить</button>
+    </div>
+
+    <div class="card">
+      <h3>Выход</h3>
+      <button id="logoutBtn" class="secondary">Выйти</button>
+    </div>
+  </div>
+
+  <pre class="state" id="stateBox"></pre>
+
+  <script src="./test.js"></script>
+  <script>
+    const stateBox = document.getElementById("stateBox");
+    const renderState = () => stateBox.textContent = JSON.stringify(window.apiState, null, 2)
+    renderState();
+
+    const byId = (id) => document.getElementById(id);
+
+    byId("signupBtn").onclick = async () => {
+      await window.api.signup(
+        byId("signupEmail").value,
+        byId("signupPassword").value
+      );
+      renderState();
+    };
+
+    byId("signinBtn").onclick = async () => {
+      await window.api.signin(
+        byId("signinEmail").value,
+        byId("signinPassword").value
+      );
+      renderState();
+    };
+
+    byId("refreshBtn").onclick = async () => {
+      await window.api.refresh();
+      renderState();
+    };
+
+    byId("infoBtn").onclick = async () => await window.api.info();
+
+    byId("uploadBtn").onclick = async () => {
+      const file = byId("uploadFile").files[0];
+      if (!file) return alert("Выберите файл");
+      await window.api.uploadFile(file);
+      renderState();
+    };
+
+    byId("listBtn").onclick = async () => {
+      const listSize = Number(byId("listSize").value || 10);
+      const page = Number(byId("listPage").value || 1);
+      await window.api.listFiles(listSize, page);
+    };
+
+    byId("getFileBtn").onclick = async () => await window.api.getFile(byId("getFileId").value || undefined)
+
+
+    byId("downloadFileBtn").onclick = async () => await window.api.downloadFile(byId("downloadFileId").value || undefined);
+
+
+    byId("deleteFileBtn").onclick = async () => {
+      await window.api.deleteFile(byId("deleteFileId").value || undefined);
+      renderState();
+    };
+
+    byId("updateFileBtn").onclick = async () => {
+      const file = byId("updateFile").files[0];
+      if (!file) return alert("Выберите файл");
+      await window.api.updateFile(byId("updateFileId").value || undefined, file);
+    };
+
+    byId("logoutBtn").onclick = async () => {
+      await window.api.logout();
+      renderState();
+    };
+  </script>
+</body>
+
+</html>

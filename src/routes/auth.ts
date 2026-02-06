@@ -1,14 +1,14 @@
-﻿import { Request, Response, Router } from "express";
+﻿import {Request, Response, Router} from "express";
 import jwt from "jsonwebtoken";
-import { AppDataSource } from "../data-source.js";
-import { config } from "../config.js";
-import { signAccessToken, signRefreshToken } from "../utils/tokens.js";
-import { authMiddleware, AuthRequest } from "../middleware/auth.js";
-import { User } from "../entities/user.js";
-import { UserSession } from "../entities/user-session.js";
-import { IsNull } from "typeorm";
-import { sendError, sendOk } from "../utils/http.js";
-import { compareValue, hashValue } from "../utils/crypto.js";
+import {AppDataSource} from "../data-source.js";
+import {config} from "../config.js";
+import {signAccessToken, signRefreshToken} from "../utils/tokens.js";
+import {authMiddleware, AuthRequest} from "../middleware/auth.js";
+import {User} from "../entities/user.js";
+import {UserSession} from "../entities/user-session.js";
+import {IsNull} from "typeorm";
+import {sendError, sendOk} from "../utils/http.js";
+import {compareValue, hashValue} from "../utils/crypto.js";
 
 const router = Router();
 
@@ -89,7 +89,7 @@ router.post("/signup", async (req: Request, res: Response) => {
     if (!email || !password) return sendError(res, 400, "email и пароль обязательны");
 
     const userRepo = AppDataSource.getRepository(User);
-    const existing = await userRepo.findOne({ where: { email } });
+    const existing = await userRepo.findOne({where: {email}});
     if (existing) return sendError(res, 409, "Пользователь уже существует");
 
     const passwordHash = await hashValue(password);
@@ -116,7 +116,7 @@ router.post("/signin", async (req: Request, res: Response) => {
     if (!email || !password) return sendError(res, 400, "email и пароль обязательны");
 
     const userRepo = AppDataSource.getRepository(User);
-    const user = await userRepo.findOne({ where: { email } });
+    const user = await userRepo.findOne({where: {email}});
     if (!user) return sendError(res, 401, "Неверные учетные данные");
 
     const ok = await compareValue(password, user.password_hash);
@@ -146,7 +146,7 @@ router.post("/signin/new_token", async (req: Request, res: Response) => {
     if (!payload.jti) return sendError(res, 401, "Неверный refresh токен");
 
     const session = await sessionRepo.findOne({
-      where: { refresh_jti: payload.jti as string, revoked_at: IsNull() },
+      where: {refresh_jti: payload.jti as string, revoked_at: IsNull()},
       relations: ["user"],
     });
 
@@ -192,7 +192,7 @@ router.get("/logout", authMiddleware, async (req: AuthRequest, res: Response) =>
     if (!accessJti) return sendError(res, 401, "Неверный токен");
 
     const session = await sessionRepo.findOne({
-      where: { access_jti: accessJti, revoked_at: IsNull() },
+      where: {access_jti: accessJti, revoked_at: IsNull()},
     });
 
     if (session) {
@@ -201,7 +201,7 @@ router.get("/logout", authMiddleware, async (req: AuthRequest, res: Response) =>
     }
     clearAuthCookies(res);
 
-    return sendOk(res, { ok: true });
+    return sendOk(res, {ok: true});
   } catch (err) {
     console.error("Ошибка при выходе:", err);
     return sendError(res, 500, "Не удалось выйти");

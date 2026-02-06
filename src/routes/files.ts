@@ -1,16 +1,16 @@
-﻿import { Router, Response } from "express";
+﻿import {Response, Router} from "express";
 import fs from "fs";
 import path from "path";
 import multer from "multer";
-import { v4 as uuidv4 } from "uuid";
-import { AppDataSource } from "../data-source.js";
-import { config } from "../config.js";
-import { FileEntity } from "../entities/file-entity.js";
-import { AuthRequest } from "../middleware/auth.js";
-import { sendError, sendOk } from "../utils/http.js";
+import {v4 as uuidv4} from "uuid";
+import {AppDataSource} from "../data-source.js";
+import {config} from "../config.js";
+import {FileEntity} from "../entities/file-entity.js";
+import {AuthRequest} from "../middleware/auth.js";
+import {sendError, sendOk} from "../utils/http.js";
 
 const ensureDir = (dir: string) => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, {recursive: true});
 };
 
 ensureDir(config.storageDir);
@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({storage});
 const router = Router();
 
 const getParamId = (value: string | string[] | undefined) =>
@@ -43,7 +43,7 @@ router.post(
       const extension = path.extname(req.file.originalname).replace(".", "");
 
       const record = await fileRepo.save({
-        user: { id: req.auth?.userId },
+        user: {id: req.auth?.userId},
         original_name: req.file.originalname,
         stored_name: req.file.filename,
         extension: extension || "",
@@ -78,8 +78,8 @@ router.get("/file/list", async (req: AuthRequest, res: Response) => {
 
     const fileRepo = AppDataSource.getRepository(FileEntity);
     const [rows, total] = await fileRepo.findAndCount({
-      where: { user: { id: userId } },
-      order: { uploaded_at: "DESC" },
+      where: {user: {id: userId}},
+      order: {uploaded_at: "DESC"},
       take,
       skip,
     });
@@ -112,7 +112,7 @@ router.get("/file/:id", async (req: AuthRequest, res: Response) => {
 
     const fileRepo = AppDataSource.getRepository(FileEntity);
     const file = await fileRepo.findOne({
-      where: { id: fileId, user: { id: userId } },
+      where: {id: fileId, user: {id: userId}},
     });
     if (!file) return sendError(res, 404, "Файл не найден");
     return sendOk(res, {
@@ -138,7 +138,7 @@ router.get("/file/download/:id", async (req: AuthRequest, res: Response) => {
 
     const fileRepo = AppDataSource.getRepository(FileEntity);
     const file = await fileRepo.findOne({
-      where: { id: fileId, user: { id: userId } },
+      where: {id: fileId, user: {id: userId}},
     });
     if (!file) return sendError(res, 404, "Файл не найден");
     const fullPath = path.join(config.storageDir, file.stored_name);
@@ -164,14 +164,14 @@ router.delete("/file/delete/:id", async (req: AuthRequest, res: Response) => {
 
     const fileRepo = AppDataSource.getRepository(FileEntity);
     const file = await fileRepo.findOne({
-      where: { id: fileId, user: { id: userId } },
+      where: {id: fileId, user: {id: userId}},
     });
     if (!file) return sendError(res, 404, "Файл не найден");
 
     const fullPath = path.join(config.storageDir, file.stored_name);
     if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
     await fileRepo.remove(file);
-    return sendOk(res, { ok: true });
+    return sendOk(res, {ok: true});
   } catch (err) {
     return sendError(res, 500, "Не удалось удалить файл");
   }
@@ -192,7 +192,7 @@ router.put(
 
       const fileRepo = AppDataSource.getRepository(FileEntity);
       const file = await fileRepo.findOne({
-        where: { id: fileId, user: { id: userId } },
+        where: {id: fileId, user: {id: userId}},
       });
       if (!file) return sendError(res, 404, "Файл не найден");
 

@@ -1,9 +1,9 @@
 import "reflect-metadata";
-import { DataSource } from "typeorm";
-import { config } from "./config.js";
-import { User } from "./entities/user.js";
-import { UserSession } from "./entities/user-session.js";
-import { FileEntity } from "./entities/file-entity.js";
+import {DataSource} from "typeorm";
+import {config} from "./config.js";
+import {User} from "./entities/user.js";
+import {UserSession} from "./entities/user-session.js";
+import {FileEntity} from "./entities/file-entity.js";
 
 export const AppDataSource = new DataSource({
   type: "mysql",

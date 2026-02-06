@@ -1,10 +1,10 @@
-﻿import { Request, Response, NextFunction } from "express";
+﻿import {NextFunction, Request, Response} from "express";
 import jwt from "jsonwebtoken";
-import { IsNull } from "typeorm";
-import { AppDataSource } from "../data-source.js";
-import { config } from "../config.js";
-import { UserSession } from "../entities/user-session.js";
-import { sendError } from "../utils/http.js";
+import {IsNull} from "typeorm";
+import {AppDataSource} from "../data-source.js";
+import {config} from "../config.js";
+import {UserSession} from "../entities/user-session.js";
+import {sendError} from "../utils/http.js";
 
 export interface AuthRequest extends Request {
   auth?: {
@@ -36,7 +36,7 @@ export const authMiddleware = async (
 
     const sessionRepo = AppDataSource.getRepository(UserSession);
     const session = await sessionRepo.findOne({
-      where: { access_jti: payload.jti as string, revoked_at: IsNull() },
+      where: {access_jti: payload.jti as string, revoked_at: IsNull()},
       relations: ["user"],
     });
     if (!session) return sendError(res, 401, "Токен отозван");
