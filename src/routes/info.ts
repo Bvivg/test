@@ -12,7 +12,7 @@ router.get("/info", async (req: AuthRequest, res: Response) => {
     const user = await userRepo.findOne({ where: { id: req.auth?.userId } });
     if (!user)
       return sendError(res, 404, "Пользователь не найден");
-    return sendOk(res, { id: user.email });
+    return sendOk(res, { id: user.id });
   } catch (err) {
     return sendError(res, 500, "Не удалось получить информацию");
   }

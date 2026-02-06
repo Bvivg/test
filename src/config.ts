@@ -7,6 +7,7 @@ dotenv.config();
 
 export const config = {
   port: toInteger(process.env.PORT) || 3005,
+  env: process.env.NODE_ENV || "development",
   db: {
     host: process.env.DB_HOST || "localhost",
     port: toInteger(process.env.DB_PORT) || 3306,
@@ -23,4 +24,12 @@ export const config = {
     refreshTtlDays: toInteger(process.env.REFRESH_TOKEN_TTL_DAYS) || 7,
   },
   storageDir: process.env.STORAGE_DIR || "./storage",
+  cookies: {
+    accessName: "access_token",
+    refreshName: "refresh_token",
+    secure: process.env.COOKIE_SECURE === "true",
+    sameSite:
+      (process.env.COOKIE_SAMESITE as "lax" | "strict" | "none" | undefined) ||
+      "lax",
+  },
 };

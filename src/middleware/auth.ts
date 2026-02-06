@@ -1,5 +1,5 @@
 ﻿import { Request, Response, NextFunction } from "express";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { IsNull } from "typeorm";
 import { AppDataSource } from "../data-source.js";
 import { config } from "../config.js";
@@ -21,7 +21,11 @@ export const authMiddleware = async (
 ) => {
   try {
     const header = req.headers.authorization || "";
-    const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+    const headerToken = header.startsWith("Bearer ") ? header.slice(7) : null;
+    const cookieToken = req.cookies?.[config.cookies.accessName] as
+      | string
+      | undefined;
+    const token = headerToken || cookieToken;
     if (!token)
       return sendError(res, 401, "Отсутствует access токен");
 

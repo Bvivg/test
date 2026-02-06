@@ -1,5 +1,5 @@
 ﻿import { Request, Response, Router } from "express";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { AppDataSource } from "../data-source.js";
 import { config } from "../config.js";
 import { signAccessToken, signRefreshToken } from "../utils/tokens.js";
@@ -46,6 +46,42 @@ const issueTokens = async (user: User, deviceId: string) => {
   };
 };
 
+const setAuthCookies = (
+  res: Response,
+  accessToken: string,
+  refreshToken: string
+) => {
+  const accessMaxAgeMs = config.jwt.accessTtlMin * 60 * 1000;
+  const refreshMaxAgeMs = config.jwt.refreshTtlDays * 24 * 60 * 60 * 1000;
+  const cookieOptions = {
+    httpOnly: true,
+    secure: config.cookies.secure || config.env === "production",
+    sameSite: config.cookies.sameSite,
+    path: "/",
+  } as const;
+
+  res.cookie(config.cookies.accessName, accessToken, {
+    ...cookieOptions,
+    maxAge: accessMaxAgeMs,
+  });
+  res.cookie(config.cookies.refreshName, refreshToken, {
+    ...cookieOptions,
+    maxAge: refreshMaxAgeMs,
+  });
+};
+
+const clearAuthCookies = (res: Response) => {
+  const cookieOptions = {
+    httpOnly: true,
+    secure: config.cookies.secure || config.env === "production",
+    sameSite: config.cookies.sameSite,
+    path: "/",
+  } as const;
+
+  res.clearCookie(config.cookies.accessName, cookieOptions);
+  res.clearCookie(config.cookies.refreshName, cookieOptions);
+};
+
 router.post("/signup", async (req: Request, res: Response) => {
   try {
     const email = req.body?.email as string | undefined;
@@ -64,6 +100,7 @@ router.post("/signup", async (req: Request, res: Response) => {
 
     const deviceId = getDeviceId(req) || `device-${user.id}-${Date.now()}`;
     const tokens = await issueTokens(user, deviceId);
+    setAuthCookies(res, tokens.access_token, tokens.refresh_token);
 
     return res.status(201).json(tokens);
   } catch (err) {
@@ -87,6 +124,7 @@ router.post("/signin", async (req: Request, res: Response) => {
 
     const deviceId = getDeviceId(req) || `device-${user.id}-${Date.now()}`;
     const tokens = await issueTokens(user, deviceId);
+    setAuthCookies(res, tokens.access_token, tokens.refresh_token);
     return sendOk(res, tokens);
   } catch (err) {
     console.error("Ошибка при входе:", err);
@@ -96,7 +134,9 @@ router.post("/signin", async (req: Request, res: Response) => {
 
 router.post("/signin/new_token", async (req: Request, res: Response) => {
   try {
-    const refreshToken = req.body?.refresh_token as string | undefined;
+    const refreshToken =
+      (req.cookies?.[config.cookies.refreshName] as string | undefined) ||
+      (req.body?.refresh_token as string | undefined);
     if (!refreshToken) return sendError(res, 400, "refresh_token обязателен");
 
     const payload = jwt.verify(refreshToken, config.jwt.refreshSecret) as jwt.JwtPayload;
@@ -131,6 +171,8 @@ router.post("/signin/new_token", async (req: Request, res: Response) => {
     session.refresh_expires_at = new Date((refreshPayload.exp || 0) * 1000);
     await sessionRepo.save(session);
 
+    setAuthCookies(res, access.token, refresh.token);
+
     return sendOk(res, {
       access_token: access.token,
       refresh_token: refresh.token,
@@ -157,6 +199,7 @@ router.get("/logout", authMiddleware, async (req: AuthRequest, res: Response) =>
       session.revoked_at = new Date();
       await sessionRepo.save(session);
     }
+    clearAuthCookies(res);
 
     return sendOk(res, { ok: true });
   } catch (err) {

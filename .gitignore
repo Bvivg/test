@@ -1,4 +1,7 @@
 /node_modules
 /dist
-.env
 /.idea
+/storage
+.env
+test.js
+index.html

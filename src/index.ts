@@ -1,6 +1,9 @@
 ﻿import express from "express";
 import cors from "cors";
 import fs from "fs";
+import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
 import { config } from "./config.js";
 import { AppDataSource } from "./data-source.js";
 import { authRouter } from "./routes/auth.js";
@@ -11,8 +14,24 @@ import { sendError } from "./utils/http.js";
 
 const app = express();
 
-app.use(cors());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, "..");
+
+const corsOptions: cors.CorsOptions = {
+  // Allow any origin (reflects request Origin header).
+  origin: (_, cb) => cb(null, true),
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
+
+app.get("/", (req, res) => res.sendFile(path.join(rootDir, "index.html")));
+app.get("/index.html", (req, res) => res.sendFile(path.join(rootDir, "index.html")));
+app.get("/test.js", (req, res) => res.sendFile(path.join(rootDir, "test.js")));
 
 if (!fs.existsSync(config.storageDir)) fs.mkdirSync(config.storageDir, { recursive: true });
 
